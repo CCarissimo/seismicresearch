@@ -1,4 +1,13 @@
 import React, { useState } from 'react';
+import cesarePortrait from './assets/cesare.jpg'
+import marcinPortrait from './assets/marcin.jpeg'
+import aicompass from './assets/logos/aicompass.png'
+import coci from './assets/logos/coci.png'
+import dit4tram from './assets/logos/dit4tram.png'
+import ns from './assets/logos/ns.jpg'
+import prorail from './assets/logos/prorail.png'
+import vattenfall from './assets/logos/vattenfall.png'
+
 
 // Main App component that structures the entire website.
 // It includes a Header, various content sections, and a Footer.
@@ -107,11 +116,11 @@ const ProjectsSection = () => {
 const CollaborationsSection = () => {
   // Array of collaboration data.
   const collaborations = [
-    { name: "Dit4Tram", logo: "dit4tram.png" },
-    { name: "CoCi", logo: "coci.png" },
-    { name: "ProRail", logo: "prorail.png" },
-    { name: "NS", logo: "ns.jpg" },
-    { name: "Vattenfall", logo: "vattenfall.png" },
+    { name: "Dit4Tram", logo: "dit4tram" },
+    { name: "CoCi", logo: "coci" },
+    { name: "ProRail", logo: "prorail" },
+    { name: "NS", logo: "ns" },
+    { name: "Vattenfall", logo: "vattenfall" },
   ];
 
   return (
@@ -122,7 +131,7 @@ const CollaborationsSection = () => {
         {collaborations.map((collab, index) => (
           <div key={index} className="group relative w-32 h-20 flex items-center justify-center p-2">
             <img
-              src={`/src/assets/logos/${collab.logo}`}
+              src={collab.logo}
               alt={`${collab.name} Logo`}
               className="w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300"
             />
@@ -181,13 +190,13 @@ const ProfilesSection = () => {
       name: "Cesare Carissimo",
       title: "Lead Economist",
       bio: "Cesare has a PhD in Machine Learning and Algorithmic Cooperation from ETH Zurich, and is specialized in game theoretic models played by artificial agents.",
-      headshot: "cesare.jpg"
+      headshot: "cesarePortrait"
     },
     {
       name: "Marcin Korecki",
       title: "Lead AI Engineer",
       bio: "Marcin has a PhD in Machine Learning and Transportation from ETH Zurich, and is specialized in applying reinforcement learning to complex systems.",
-      headshot: "marcin.jpeg"
+      headshot: "marcinPortrait"
     },
   ];
 
@@ -202,7 +211,7 @@ const ProfilesSection = () => {
             className="bg-white rounded-xl shadow-lg p-8 text-center max-w-sm w-full md:w-1/2 lg:w-1/3 transform hover:scale-102 hover:shadow-xl transition-all duration-300"
           >
             <img
-              src={`/src/assets/${person.headshot}`}
+              src={person.headshot}
               alt={`Headshot of ${person.name}`}
               className="w-32 h-32 rounded-full mx-auto mb-6 object-cover grayscale hover:grayscale-0 transition-all duration-300"
             />
