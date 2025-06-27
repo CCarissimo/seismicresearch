@@ -8,6 +8,10 @@ import ns from './assets/logos/ns.jpg'
 import prorail from './assets/logos/prorail.png'
 import vattenfall from './assets/logos/vattenfall.png'
 
+// Import Nostr-tools functions
+import { generatePrivateKey, getPublicKey, getEventHash, signEvent } from 'nostr-tools';
+import { nip04 } from 'nostr-tools/nip04'; // NIP-04 specific functions
+
 
 // Main App component that structures the entire website.
 // It includes a Header, various content sections, and a Footer.
@@ -231,6 +235,19 @@ const ContactSection = () => {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [submissionStatus, setSubmissionStatus] = useState(null); // 'success' or 'error'
 
+  // --- Configuration ---
+  // REPLACE THIS WITH THE RECIPIENT'S ACTUAL PUBLIC KEY (hex format)
+  const RECIPIENT_PUBLIC_KEY = 'npub1zyjrxwmus2zm0x8nw7vn7f3dagvghz54g6yzyww465zqa89az3rqe73xqr'; // Example public key
+
+  // List of Nostr relays to try publishing to
+  const RELAYS = [
+      'wss://relay.damus.io',
+      'wss://nostr.mom',
+      'wss://nostr.wine',
+      'wss://nos.lol',
+      // Add more reliable relays as needed
+  ];
+
   // Handles input changes and updates form data state
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -238,7 +255,7 @@ const ContactSection = () => {
   };
 
   // Handles form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent default browser form submission
 
     // Basic validation
@@ -247,8 +264,92 @@ const ContactSection = () => {
     } else {
       setSubmissionStatus('success');
       console.log('Form Submitted:', formData);
-      // In a real application, you would send formData to a backend server here.
-      // After successful submission, reset the form.
+      
+      // 1. Generate a new ephemeral private key for the sender
+      // This key will only be used once for this message.
+      const privateKey = generatePrivateKey();
+      const publicKey = getPublicKey(privateKey); // Sender's public key
+
+      // 2. Prepare the content for encryption
+      // We're sending a JSON string containing the form data.
+      const formContent = JSON.stringify({
+          fromName: name,
+          fromEmail: email,
+          message: message,
+          timestamp: Date.now() // Add a timestamp for reference
+      });
+
+      // 3. Encrypt the message using NIP-04 (Shared Secret Encryption)
+      // The recipient needs their private key and the sender's public key to decrypt.
+      const encryptedContent = await nip04.encrypt(privateKey, RECIPIENT_PUBLIC_KEY, formContent);
+
+      // 4. Create the Nostr event object
+      // Kind 4 is for encrypted direct messages (NIP-04).
+      // The 'p' tag indicates the recipient of the message.
+      const unsignedEvent = {
+          kind: 4,
+          pubkey: publicKey, // Sender's public key
+          created_at: Math.floor(Date.now() / 1000), // Current timestamp in seconds
+          tags: [['p', RECIPIENT_PUBLIC_KEY]], // Recipient's public key tag
+          content: encryptedContent, // The encrypted message
+      };
+
+      // 5. Sign the event with the sender's private key
+      const signedEvent = finalizeEvent(unsignedEvent, privateKey);
+
+      // 6. Attempt to publish the event to relays
+      const pool = relayPool(); // Create a new relay pool
+
+      let publishedToAnyRelay = false;
+      let successRelays = [];
+      let failedRelays = [];
+
+      // Listen for 'ok' and 'error' events from the pool
+      pool.on('ok', (eventId, successful, message, url) => {
+          if (successful) {
+              console.log(`Event ${eventId} published successfully to ${url}: ${message}`);
+              successRelays.push(url);
+              publishedToAnyRelay = true;
+          } else {
+              console.error(`Failed to publish event ${eventId} to ${url}: ${message}`);
+              failedRelays.push(url);
+          }
+      });
+
+      pool.on('error', (url) => {
+          console.error(`Error connecting or publishing to relay: ${url}`);
+          failedRelays.push(url);
+      });
+
+      // Iterate through relays and try to publish
+      for (const relayUrl of RELAYS) {
+          try {
+              console.log(`Attempting to publish to: ${relayUrl}`);
+              pool.publish(relayUrl, signedEvent);
+              // No await here because pool.publish returns immediately.
+              // The actual 'ok'/'error' status comes via event listeners.
+          } catch (error) {
+              console.error(`Failed to initiate publish to ${relayUrl}:`, error);
+              failedRelays.push(relayUrl);
+          }
+      }
+
+      // Give some time for relays to respond.
+      // In a real app, you might want more sophisticated relay management (e.g., promises, timeouts for each).
+      await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for 5 seconds for responses
+
+      pool.close(); // Close all relay connections in the pool
+
+      if (publishedToAnyRelay) {
+          showStatus(`Message sent successfully! Published to: ${successRelays.join(', ')}.`, 'success');
+          // Optionally clear the form after successful submission
+          setName('');
+          setEmail('');
+          setMessage('');
+      } else {
+          showStatus(`Failed to send message to any relay. Failed relays: ${failedRelays.join(', ')}. See console for details.`, 'error');
+      }
+
       setFormData({ name: '', email: '', message: '' });
     }
     // Hide messages after a few seconds
