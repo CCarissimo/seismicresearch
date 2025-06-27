@@ -116,11 +116,11 @@ const ProjectsSection = () => {
 const CollaborationsSection = () => {
   // Array of collaboration data.
   const collaborations = [
-    { name: "Dit4Tram", logo: "dit4tram" },
-    { name: "CoCi", logo: "coci" },
-    { name: "ProRail", logo: "prorail" },
-    { name: "NS", logo: "ns" },
-    { name: "Vattenfall", logo: "vattenfall" },
+    { name: "Dit4Tram", logo: dit4tram },
+    { name: "CoCi", logo: coci },
+    { name: "ProRail", logo: prorail },
+    { name: "NS", logo: ns },
+    { name: "Vattenfall", logo: vattenfall },
   ];
 
   return (
@@ -190,13 +190,13 @@ const ProfilesSection = () => {
       name: "Cesare Carissimo",
       title: "Lead Economist",
       bio: "Cesare has a PhD in Machine Learning and Algorithmic Cooperation from ETH Zurich, and is specialized in game theoretic models played by artificial agents.",
-      headshot: "cesarePortrait"
+      headshot: cesarePortrait
     },
     {
       name: "Marcin Korecki",
       title: "Lead AI Engineer",
       bio: "Marcin has a PhD in Machine Learning and Transportation from ETH Zurich, and is specialized in applying reinforcement learning to complex systems.",
-      headshot: "marcinPortrait"
+      headshot: marcinPortrait
     },
   ];
 
